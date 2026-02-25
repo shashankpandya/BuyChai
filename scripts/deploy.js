@@ -19,41 +19,56 @@ async function consoleMemos(memos) {
     const from = memo.from;
     const message = memo.message;
     console.log(
-      `At ${timestamp},name ${name},address ${from},message ${message}`
+      `At ${timestamp},name ${name},address ${from},message ${message}`,
     );
   }
 }
 async function main() {
-  const [owner, from1, from2, from3, from4] = await hre.ethers.getSigners();
+  const signers = await hre.ethers.getSigners();
+  const owner = signers[0];
   const chai = await hre.ethers.getContractFactory("chai");
   const contract = await chai.deploy(); //instance of contract
 
   await contract.deployed();
   console.log("Address of contract:", contract.address);
 
-  const addresses = [
-    owner.address,
-    from1.address,
-    from2.address,
-    from3.address,
-    from4.address,
-  ];
-  console.log("Before buying chai");
-  await cosoleBalances(addresses);
+  const addresses = [owner.address];
 
-  const amount = { value: hre.ethers.utils.parseEther("1") };
-  await contract.connect(from1).buyChai("from1", "Very nice chai", amount);
-  await contract.connect(from2).buyChai("from2", "Very nice course", amount);
-  await contract
-    .connect(from3)
-    .buyChai("from3", "Very nice information", amount);
-  await contract.connect(from4).buyChai("from4", "Very nice book", amount);
+  // Only run tests with multiple signers on local network
+  if (signers.length > 1) {
+    addresses.push(signers[1].address);
+    addresses.push(signers[2].address);
+    addresses.push(signers[3].address);
+    addresses.push(signers[4].address);
 
-  console.log("After buying chai");
-  await cosoleBalances(addresses);
+    console.log("Before buying chai");
+    await cosoleBalances(addresses);
 
-  const memos = await contract.getMemos();
-  await consoleMemos(memos);
+    const amount = { value: hre.ethers.utils.parseEther("1") };
+    await contract
+      .connect(signers[1])
+      .buyChai("from1", "Very nice chai", amount);
+    await contract
+      .connect(signers[2])
+      .buyChai("from2", "Very nice course", amount);
+    await contract
+      .connect(signers[3])
+      .buyChai("from3", "Very nice information", amount);
+    await contract
+      .connect(signers[4])
+      .buyChai("from4", "Very nice book", amount);
+
+    console.log("After buying chai");
+    await cosoleBalances(addresses);
+
+    const memos = await contract.getMemos();
+    await consoleMemos(memos);
+  } else {
+    console.log(
+      "Single signer detected (Sepolia network). Skipping multi-signer tests.",
+    );
+    console.log("Owner address:", owner.address);
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere

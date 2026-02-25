@@ -29,6 +29,20 @@ contract chai {
         return memos ;
     }
 
+    function getOwner() public view returns (address) {
+        return owner;
+    }
+
+    function withdrawFunds() public {
+        require(msg.sender == owner, "Only owner can withdraw");
+        owner.transfer(address(this).balance);
+    }
+
+    function changeOwner(address payable newOwner) public {
+        require(msg.sender == owner, "Only owner can change owner");
+        owner = newOwner;
+    }
+
     // // Function to receive Ether and immediately forward it to the owner
     // receive() external payable {
     //     forwardFunds();
